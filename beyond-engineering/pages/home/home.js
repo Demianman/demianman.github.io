@@ -3217,6 +3217,61 @@ function PolaroidCard(param) {
 // -----------------------------------------------------------------------------
 // Page Component
 // -----------------------------------------------------------------------------
+var SPOTIFY_TRACK = 'spotify:track:2YviO36G8Q4PRxanXO8HbG';
+var spotifyIframeAPI = null;
+function SpotifyRecordEmbed(props) {
+    var mountRef = react.useRef(null);
+    var readyState = react.useState(false), ready = readyState[0], setReady = readyState[1];
+    react.useEffect(function () {
+        var active = true;
+        var createPlayer = function (api) {
+            if (!active || !mountRef.current) return;
+            api.createController(mountRef.current, { uri: SPOTIFY_TRACK, width: '100%', height: 152 }, function (controller) {
+                if (!active) { controller.destroy(); return; }
+                props.controllerRef.current = controller;
+                controller.addListener('ready', function () {
+                    if (!active) return;
+                    setReady(true);
+                    controller.play();
+                });
+                controller.addListener('playback_started', function () {
+                    if (active) props.onPlaybackChange(true);
+                });
+                controller.addListener('playback_update', function (event) {
+                    if (active) props.onPlaybackChange(!event.data.isPaused && !event.data.isBuffering);
+                });
+            });
+        };
+        if (spotifyIframeAPI) createPlayer(spotifyIframeAPI);
+        else {
+            window.onSpotifyIframeApiReady = function (api) {
+                spotifyIframeAPI = api;
+                createPlayer(api);
+            };
+            if (!document.querySelector('script[data-spotify-iframe-api]')) {
+                var script = document.createElement('script');
+                script.src = 'https://open.spotify.com/embed/iframe-api/v1';
+                script.async = true;
+                script.dataset.spotifyIframeApi = 'true';
+                document.body.appendChild(script);
+            }
+        }
+        return function () {
+            active = false;
+            if (props.controllerRef.current) props.controllerRef.current.destroy();
+            props.controllerRef.current = null;
+        };
+    }, []);
+    return react.createElement('div', { className: 'w-full max-w-4xl mx-auto mt-12 flex justify-end' },
+        react.createElement('div', { className: 'w-full bg-white border-2 border-border-ink p-3 -rotate-1', style: { maxWidth: 380, boxShadow: '8px 8px 0 var(--border-ink)' } },
+            react.createElement('div', { className: 'font-mono text-xs font-bold uppercase tracking-widest mb-1 flex justify-between gap-4' },
+                react.createElement('span', null, 'ON THE TURNTABLE'),
+                react.createElement('span', null, ready ? 'SIDE A' : 'LOADING...')),
+            react.createElement('div', { ref: mountRef, style: { minHeight: 152 } }),
+            react.createElement('div', { className: 'mt-4 font-mono text-xs flex justify-between gap-4' },
+                react.createElement('span', null, "THE STROKES · I'LL TRY ANYTHING ONCE"),
+                react.createElement('a', { href: 'https://open.spotify.com/track/2YviO36G8Q4PRxanXO8HbG', target: '_blank', rel: 'noopener noreferrer', className: 'underline shrink-0' }, 'SPOTIFY'))));
+}
 function PersonalHomepage() {
     var _this = this;
     // Navigation scrolling
@@ -3230,6 +3285,12 @@ function PersonalHomepage() {
     };
     // States for interactive elements
     var _useState = _sliced_to_array((0,react.useState)(false), 2), isSpinning = _useState[0], setIsSpinning = _useState[1];
+    var spotifyShow = react.useState(false), showPlayer = spotifyShow[0], setShowPlayer = spotifyShow[1];
+    var spotifyController = react.useRef(null);
+    var handleRecordClick = function () {
+        if (!showPlayer) setShowPlayer(true);
+        else if (spotifyController.current) spotifyController.current.togglePlay();
+    };
     var _useState1 = _sliced_to_array((0,react.useState)(false), 2), isFocusing = _useState1[0], setIsFocusing = _useState1[1];
     var _useState2 = _sliced_to_array((0,react.useState)(false), 2), isScooping = _useState2[0], setIsScooping = _useState2[1];
     var _useState3 = _sliced_to_array((0,react.useState)(false), 2), isRecording = _useState3[0], setIsRecording = _useState3[1];
@@ -3403,18 +3464,18 @@ function PersonalHomepage() {
                                         lineNumber: 115,
                                         columnNumber: 13
                                     }, this),
-                                    /*#__PURE__*/ jsxDEV("div", {
+                                        /*#__PURE__*/ jsxDEV("button", {
+                                        type: "button",
                                         className: "relative w-64 h-64 md:w-96 md:h-96 shrink-0 cursor-pointer group",
-                                        onClick: function onClick() {
-                                            return setIsSpinning(!isSpinning);
-                                        },
+                                        onClick: handleRecordClick,
+                                        "aria-label": isSpinning ? "Pause I'll Try Anything Once" : "Play I'll Try Anything Once",
                                         children: [
                                             /*#__PURE__*/ jsxDEV("div", {
                                                 className: "absolute",
                                                 style: { left: '-24px', top: '32px', zIndex: 30 },
                                                 children: /*#__PURE__*/ jsxDEV(TapeAnnotation, {
                                                     rotate: "4deg",
-                                                    children: isSpinning ? 'NOW PLAYING ♫' : 'CLICK TO SPIN'
+                                                    children: isSpinning ? 'NOW PLAYING ♫' : 'CLICK TO PLAY'
                                                 }, void 0, false, {
                                                     fileName: "/workspace/prototype/src/pages/home/source/index.tsx",
                                                     lineNumber: 132,
@@ -3510,7 +3571,8 @@ function PersonalHomepage() {
                                 fileName: "/workspace/prototype/src/pages/home/source/index.tsx",
                                 lineNumber: 113,
                                 columnNumber: 11
-                            }, this)
+                            }, this),
+                            showPlayer ? react.createElement(SpotifyRecordEmbed, { onPlaybackChange: setIsSpinning, controllerRef: spotifyController }) : null
                         ]
                     }, void 0, true, {
                         fileName: "/workspace/prototype/src/pages/home/source/index.tsx",
