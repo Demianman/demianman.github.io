@@ -1,0 +1,15 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 320" fill="none" aria-hidden="true">
+  <!-- Corner-frame geometry adapted from Tabler Icons border-corners (MIT): https://tablericons.com/icon/border-corners/ -->
+  <g stroke="#101015" stroke-opacity=".52" stroke-width="5" stroke-linecap="square">
+    <path d="M40 88V40h48M232 40h48v48M280 232v48h-48M88 280H40v-48"/>
+    <path d="M147 160h26M160 147v26"/>
+  </g>
+  <g stroke="#fffdf7" stroke-width="2.5" stroke-linecap="square">
+    <path d="M40 88V40h48M232 40h48v48M280 232v48h-48M88 280H40v-48"/>
+    <path d="M151 160h18M160 151v18"/>
+  </g>
+  <g fill="#fffdf7" font-family="monospace" font-weight="700" font-size="9" letter-spacing="1.5">
+    <text x="42" y="30">AF</text>
+    <text x="245" y="30">PHOTO</text>
+  </g>
+</svg>
